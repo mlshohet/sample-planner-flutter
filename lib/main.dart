@@ -60,7 +60,8 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
+
 
   final List<Transaction> _userTransactions = [
     // Transaction(
@@ -78,6 +79,23 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   bool _showChart = false;
+
+  @override
+  initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+  }
+
+  @override
+  dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
 
   List<Transaction> get _recentTransactions {
     return _userTransactions.where((tx) {
@@ -122,6 +140,50 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  List<Widget> _buildLandscapeContent(AppBar appBar, Widget txListWidget) {
+      return [
+        Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text('Show Chart'),
+              Switch.adaptive(
+                activeColor: Theme.of(context).accentColor,
+                value: _showChart,
+                onChanged: (val) {
+                  setState(() {
+                    _showChart = val;
+                  });
+                },
+              ),
+            ],
+        ),
+        _showChart 
+          ? Container(
+            height: (
+              MediaQuery.of(context).size.height
+                - appBar.preferredSize.height
+                - MediaQuery.of(context).padding.top
+            ) * 0.7,
+            child: Chart(_recentTransactions),
+          )
+          : txListWidget,
+      ];
+  }
+
+  List<Widget> _buildPotraitContent(AppBar appBar, Widget txListWidget) {
+    return [
+      Container(
+        height: (
+          MediaQuery.of(context).size.height
+            - appBar.preferredSize.height
+            - MediaQuery.of(context).padding.top
+        ) * 0.3,
+          child: Chart(_recentTransactions),
+      ), 
+      txListWidget,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     
@@ -162,40 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children:
             <Widget>[
-              if (isLandscape) Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Show Chart'),
-                  Switch.adaptive(
-                    activeColor: Theme.of(context).accentColor,
-                    value: _showChart,
-                    onChanged: (val) {
-                      setState(() {
-                        _showChart = val;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              if(!isLandscape) Container(
-                height: (
-                  MediaQuery.of(context).size.height
-                    - appBar.preferredSize.height
-                    - MediaQuery.of(context).padding.top
-                ) * 0.3,
-                child: Chart(_recentTransactions),
-              ),
-              if(!isLandscape) txListWidget,
-              if (isLandscape) _showChart 
-              ? Container(
-                height: (
-                  MediaQuery.of(context).size.height
-                    - appBar.preferredSize.height
-                    - MediaQuery.of(context).padding.top
-                ) * 0.7,
-                child: Chart(_recentTransactions),
-              )
-              : txListWidget,
+              if (isLandscape) ..._buildLandscapeContent(appBar, txListWidget),
+              if(!isLandscape) ..._buildPotraitContent(appBar, txListWidget),
             ],
         ),
         floatingActionButton: 

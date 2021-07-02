@@ -5,7 +5,11 @@ class ChartBar extends StatelessWidget {
 	final double spendingAmount;
 	final double spendingPctOfTotal;
 
-	ChartBar(
+	// use const to build a const constructor
+	//this instance will be unchangeable after creation
+	// cannot be assigned properties after creaiton
+	
+	const ChartBar(
 		this.label,
 		this.spendingAmount,
 		this.spendingPctOfTotal,
